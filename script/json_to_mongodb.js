@@ -25,6 +25,12 @@ const wordSchema = new mongoose.Schema(
         pos: { type: String, maxlength: 8, default: null }, // 词性
       },
     ],
+    sentences: [
+      {
+        sContent: String,
+        sCn: String,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -74,6 +80,7 @@ async function insertData(originWord) {
     word.bookKey = "cet4";
     word.trans = content.trans;
     word.phone = content.phone;
+    word.sentences = content.sentence.sentences;
     await word.save();
   } catch (error) {}
 }

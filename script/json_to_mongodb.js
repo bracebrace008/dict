@@ -12,17 +12,16 @@ mongoose.connect("mongodb://127.0.0.1:27017/ashtree", {
 
 const wordSchema = new mongoose.Schema(
   {
-    wordHead: { type: String, required: true, maxlength: 64 }, // 词头
-    wordKey: { type: String, required: true, maxlength: 64, unique: true }, // 唯一键
-    usphone: { type: String, maxlength: 32, default: null }, // 美音音标
-    ukphone: { type: String, maxlength: 32, default: null }, // 英音音标
-    phone: { type: String, maxlength: 32, default: null }, // 音标
-    bookKey: { type: String, required: true, maxlength: 32 }, // 所属的bookId
+    wordHead: { type: String, required: true, maxlength: 64, index: true }, // 词头
+    usphone: { type: String, maxlength: 128, default: null }, // 美音音标
+    ukphone: { type: String, maxlength: 128, default: null }, // 英音音标
+    phone: { type: String, maxlength: 128, default: null }, // 音标
+    bookKey: { type: String, required: true, maxlength: 32, index: true }, // 所属的bookId
     trans: [
       {
         tranCn: String, // 中文释义
         tranOther: String, // 英英释义
-        pos: { type: String, maxlength: 8, default: null }, // 词性
+        pos: { type: String, maxlength: 32, default: null }, // 词性
       },
     ],
     sentences: [
@@ -66,23 +65,30 @@ function replaceCharacters(text) {
 
 // 插入数据
 async function insertData(originWord) {
+  const bookKey = "CET4luan_2";
   const content = originWord.content.word.content;
-  console.log("content:", content);
-  const snakeCaseWordKey = originWord.headWord
-    .toLowerCase()
-    .replace(/\s+/g, "_");
   try {
-    const word = new WordModel();
+    let word = await WordModel.findOne({
+      wordHead: originWord.headWord,
+      bookKey,
+    });
+    if (word) {
+      // console.log(`${originWord.headWord} 已存在`);
+      return;
+    }
+    word = new WordModel();
     word.wordHead = originWord.headWord;
-    word.wordKey = snakeCaseWordKey;
     word.usphone = content.usphone;
     word.ukphone = content.ukphone;
-    word.bookKey = "cet4";
+    word.bookKey = bookKey;
     word.trans = content.trans;
     word.phone = content.phone;
-    word.sentences = content.sentence.sentences;
+    word.sentences = content?.sentence?.sentences;
     await word.save();
-  } catch (error) {}
+    console.log("insert word:", word);
+  } catch (error) {
+    console.log("insertData error:", error);
+  }
 }
 
 async function processLineByLine(filePath) {
@@ -110,6 +116,6 @@ async function processLineByLine(filePath) {
   }
 }
 
-processLineByLine("../book/CET4luan_1.json");
+processLineByLine("../book/CET4luan_2.json");
 
 // insertData();

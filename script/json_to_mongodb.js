@@ -12,6 +12,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/ashtree", {
 
 const wordSchema = new mongoose.Schema(
   {
+    sort: { type: Number, default: 0 }, // 排序
     wordHead: { type: String, required: true, maxlength: 64, index: true }, // 词头
     usphone: { type: String, maxlength: 128, default: null }, // 美音音标
     ukphone: { type: String, maxlength: 128, default: null }, // 英音音标
@@ -77,6 +78,7 @@ async function insertData(originWord) {
       return;
     }
     word = new WordModel();
+    word.sort = originWord.wordRank;
     word.wordHead = originWord.headWord;
     word.usphone = content.usphone;
     word.ukphone = content.ukphone;
